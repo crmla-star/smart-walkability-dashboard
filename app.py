@@ -14,56 +14,124 @@ st.set_page_config(
 # -----------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap');
 
-html, body, [class*="css"]  {
-    font-family: 'Lexend', sans-serif;
+/* Force light theme feel */
+html, body, [class*="css"], .stApp {
+    font-family: 'Lexend', sans-serif !important;
+    background-color: #f7fafd !important;
+    color: #16324f !important;
 }
 
+/* Main app background */
 .stApp {
-    background-color: #f8fbff;
+    background: #f7fafd !important;
 }
 
+/* Main title */
 .main-title {
-    font-size: 34px;
-    font-weight: 700;
-    color: #1f4e79;
+    font-size: 42px;
+    font-weight: 800;
+    color: #16324f;
     margin-bottom: 0;
+    line-height: 1.1;
 }
 
 .sub-title {
-    font-size: 17px;
-    color: #4f6f8f;
-    margin-top: 0;
+    font-size: 18px;
+    color: #4f6b88;
+    margin-top: 4px;
     margin-bottom: 20px;
+    font-weight: 400;
 }
 
+/* Intro card */
 .card {
-    background-color: white;
+    background-color: #ffffff;
+    color: #16324f;
     padding: 18px;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-radius: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     border-left: 6px solid #f4c542;
+    font-size: 15px;
 }
 
+/* Section containers */
 .section-box {
-    background-color: white;
-    padding: 16px;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    background-color: #ffffff;
+    color: #16324f;
+    padding: 18px;
+    border-radius: 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     margin-bottom: 18px;
+    border: 1px solid #e7eef6;
 }
 
+/* Metric cards */
 div[data-testid="stMetric"] {
-    background-color: white;
-    border: 1px solid #e6eef7;
+    background-color: #ffffff;
+    border: 1px solid #e7eef6;
     padding: 14px;
-    border-radius: 14px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    border-radius: 16px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.04);
 }
 
-h2, h3 {
-    color: #1f4e79;
+/* Metric labels and values */
+div[data-testid="stMetricLabel"] {
+    color: #5a718b !important;
+    font-weight: 600;
+}
+div[data-testid="stMetricValue"] {
+    color: #16324f !important;
+    font-weight: 800;
+}
+
+/* Section headers */
+h1, h2, h3 {
+    color: #16324f !important;
+    font-family: 'Lexend', sans-serif !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background-color: #eef5fb !important;
+    border-right: 1px solid #d9e6f2;
+}
+section[data-testid="stSidebar"] * {
+    color: #16324f !important;
+    font-family: 'Lexend', sans-serif !important;
+}
+
+/* Sidebar select / multiselect / slider labels */
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] div {
+    color: #16324f !important;
+}
+
+/* Inputs */
+.stSelectbox div, .stMultiSelect div, .stSlider div {
+    color: #16324f !important;
+}
+
+/* Dataframe container */
+[data-testid="stDataFrame"] {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* Buttons */
+.stDownloadButton button {
+    background-color: #2f80ed !important;
+    color: white !important;
+    border-radius: 10px !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+.stDownloadButton button:hover {
+    background-color: #256fd1 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -104,7 +172,7 @@ df = load_data()
 # -----------------------------
 # Sidebar
 # -----------------------------
-st.sidebar.title("Dashboard Filters")
+st.sidebar.markdown("## Dashboard Filters")
 
 hotspot_options = sorted(df["hotspot"].dropna().unique().tolist())
 selected_hotspots = st.sidebar.multiselect(
@@ -126,7 +194,7 @@ min_risk = st.sidebar.slider(
     max_value=float(df["risk_index"].max()),
     value=float(df["risk_index"].min()),
     step=0.5,
-    help="Shows only segments with a risk index equal to or above the selected value."
+    help="Displays only sidewalk segments whose risk index is equal to or higher than the selected threshold."
 )
 
 filtered_df = df[
@@ -144,7 +212,8 @@ st.markdown('<p class="sub-title">Sidewalk Risk Prioritization Dashboard for LGU
 st.markdown("""
 <div class="card">
 This dashboard helps identify sidewalk segments that should be prioritized for maintenance based on hazard frequency,
-risk index, and hotspot analysis. It is intended to support LGU decision-making for safer and more walkable streets.
+risk index, and hotspot analysis. It supports LGU decision-making by highlighting which sidewalk areas need immediate repair,
+monitoring, or lower-priority intervention.
 </div>
 """, unsafe_allow_html=True)
 
@@ -184,13 +253,13 @@ else:
         if risk_level == "High Risk":
             return "#ff1f1f"   # bright red
         elif risk_level == "Medium Risk":
-            return "#ff7a7a"   # medium red
+            return "#e57373"   # medium red
         else:
-            return "#ffd6d6"   # light red
+            return "#9e9e9e"   # gray
 
     for _, row in filtered_df.iterrows():
         popup_html = f"""
-        <div style="font-family: Lexend, sans-serif; font-size: 13px;">
+        <div style="font-family: Lexend, sans-serif; font-size: 13px; color: #16324f;">
             <b>Segment ID:</b> {row['segment_id']}<br>
             <b>Risk Index:</b> {row['risk_index']}<br>
             <b>Total Hazards:</b> {row['total_hazards']}<br>
@@ -203,16 +272,16 @@ else:
 
         folium.CircleMarker(
             location=[row["lat"], row["long"]],
-            radius=5,  # fixed smaller marker size
+            radius=5,
             color=get_risk_color(row["risk_level"]),
             fill=True,
             fill_color=get_risk_color(row["risk_level"]),
-            fill_opacity=0.8,
+            fill_opacity=0.85,
             weight=1,
             popup=folium.Popup(popup_html, max_width=300)
         ).add_to(m)
 
-    st_folium(m, width=None, height=520, use_container_width=True)
+    st_folium(m, width=None, height=540, use_container_width=True)
 
 st.markdown('</div>', unsafe_allow_html=True)
 
@@ -225,11 +294,34 @@ st.subheader("Priority Repair List")
 priority_df = filtered_df.sort_values(
     by=["risk_index", "total_hazards"],
     ascending=[False, False]
-)[["segment_id", "risk_index", "total_hazards", "risk_level", "priority"]]
+)[["segment_id", "risk_index", "total_hazards", "risk_level", "priority"]].copy()
 
 priority_df.columns = ["Segment ID", "Risk Index", "Total Hazards", "Risk Level", "Priority"]
 
-st.dataframe(priority_df, use_container_width=True, height=320)
+def priority_color(val):
+    if val == "Immediate Repair":
+        return "background-color: #ffdddd; color: #8b0000; font-weight: 700;"
+    elif val == "Monitor":
+        return "background-color: #fff1cc; color: #8a6d00; font-weight: 700;"
+    else:
+        return "background-color: #eeeeee; color: #4a4a4a; font-weight: 700;"
+
+def risk_gradient(val):
+    try:
+        if val >= 6:
+            return "background-color: #ffcccc; color: #7a0000; font-weight: 700;"
+        elif val >= 3:
+            return "background-color: #ffe1e1; color: #a33a3a; font-weight: 700;"
+        else:
+            return "background-color: #f0f0f0; color: #555555; font-weight: 700;"
+    except:
+        return ""
+
+styled_priority_df = priority_df.style \
+    .applymap(priority_color, subset=["Priority"]) \
+    .applymap(risk_gradient, subset=["Risk Index"])
+
+st.dataframe(styled_priority_df, use_container_width=True, height=340)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # -----------------------------
@@ -266,8 +358,9 @@ with c1:
     fig_hazards.update_layout(
         plot_bgcolor="white",
         paper_bgcolor="white",
-        font=dict(family="Lexend", size=12),
-        showlegend=False
+        font=dict(family="Lexend", size=12, color="#16324f"),
+        showlegend=False,
+        title=None
     )
     st.plotly_chart(fig_hazards, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -285,7 +378,8 @@ with c2:
     fig_risk.update_layout(
         plot_bgcolor="white",
         paper_bgcolor="white",
-        font=dict(family="Lexend", size=12)
+        font=dict(family="Lexend", size=12, color="#16324f"),
+        title=None
     )
     st.plotly_chart(fig_risk, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
