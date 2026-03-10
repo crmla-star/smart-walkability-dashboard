@@ -6,6 +6,7 @@ import plotly.express as px
 
 st.set_page_config(
     page_title="Smart Walkability Monitoring System",
+    page_icon="🦽",
     layout="wide"
 )
 
@@ -107,11 +108,34 @@ section[data-testid="stSidebar"] div {
     color: #16324f !important;
 }
 
+/* Change selected multiselect chip color */
+.stMultiSelect span[data-baseweb="tag"] {
+    background-color: #5b8def !important;
+    color: #ffffff !important;
+    border-radius: 10px !important;
+}
+
+.stMultiSelect span[data-baseweb="tag"] * {
+    color: #ffffff !important;
+}
+
+/* Slider accent */
+.stSlider [role="slider"] {
+    background-color: #5b8def !important;
+    border-color: #5b8def !important;
+}
+
+.stSlider div[data-baseweb="slider"] > div > div {
+    background-color: #5b8def !important;
+}
+
+/* Dataframe */
 [data-testid="stDataFrame"] {
     border-radius: 12px;
     overflow: hidden;
 }
 
+/* Download button */
 .stDownloadButton button {
     background-color: #2f80ed !important;
     color: white !important;
@@ -124,6 +148,7 @@ section[data-testid="stSidebar"] div {
     background-color: #256fd1 !important;
 }
 
+/* Legend */
 .legend-box {
     display: flex;
     gap: 18px;
@@ -187,7 +212,11 @@ df = load_data()
 # -----------------------------
 # Sidebar
 # -----------------------------
-st.sidebar.markdown("## Dashboard Filters")
+st.sidebar.markdown("""
+<div style="font-size:24px;font-weight:700;color:#16324f;margin-bottom:10px;">
+Dashboard Filters
+</div>
+""", unsafe_allow_html=True)
 
 hotspot_options = sorted(df["hotspot"].dropna().unique().tolist())
 selected_hotspots = st.sidebar.multiselect(
