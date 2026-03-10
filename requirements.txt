@@ -2,4 +2,14 @@ streamlit
 pandas
 folium
 streamlit-folium
+
 plotly
+
+ultralytics
+geopandas
+shapely
+libpysal
+esda
+streamlit-folium
+plotly
+streamlit-autorefresh
