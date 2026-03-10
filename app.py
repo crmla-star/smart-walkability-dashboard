@@ -1,14 +1,22 @@
+import os
 import streamlit as st
 import pandas as pd
 import folium
-from streamlit_folium import st_folium
 import plotly.express as px
+from streamlit_folium import st_folium
+from streamlit_autorefresh import st_autorefresh
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+GI_STAR_FILE = os.path.join(BASE_DIR, "segment_gi_star.csv")
 
 st.set_page_config(
     page_title="Smart Walkability Monitoring System",
     page_icon="🦽",
     layout="wide"
 )
+
+# auto refresh every 10 seconds
+st_autorefresh(interval=10_000, key="dashboard_refresh")
 
 # -----------------------------
 # Custom CSS
@@ -108,7 +116,6 @@ section[data-testid="stSidebar"] div {
     color: #16324f !important;
 }
 
-/* Change selected multiselect chip color */
 .stMultiSelect span[data-baseweb="tag"] {
     background-color: #5b8def !important;
     color: #ffffff !important;
@@ -119,7 +126,6 @@ section[data-testid="stSidebar"] div {
     color: #ffffff !important;
 }
 
-/* Slider accent */
 .stSlider [role="slider"] {
     background-color: #5b8def !important;
     border-color: #5b8def !important;
@@ -129,13 +135,11 @@ section[data-testid="stSidebar"] div {
     background-color: #5b8def !important;
 }
 
-/* Dataframe */
 [data-testid="stDataFrame"] {
     border-radius: 12px;
     overflow: hidden;
 }
 
-/* Download button */
 .stDownloadButton button {
     background-color: #2f80ed !important;
     color: white !important;
@@ -148,7 +152,6 @@ section[data-testid="stSidebar"] div {
     background-color: #256fd1 !important;
 }
 
-/* Legend */
 .legend-box {
     display: flex;
     gap: 18px;
@@ -179,35 +182,83 @@ section[data-testid="stSidebar"] div {
 # -----------------------------
 # Load data
 # -----------------------------
-@st.cache_data
+@st.cache_data(ttl=5)
 def load_data():
-    df = pd.read_csv("segment_gi_star.csv")
+    if not os.path.exists(GI_STAR_FILE):
+        return pd.DataFrame()
 
-    df["hotspot"] = df["hotspot"].fillna("Not Significant").astype(str)
-    df["damage"] = df["damage"].fillna("Intact").astype(str)
+    df = pd.read_csv(GI_STAR_FILE)
+
+    if df.empty:
+        return df
+
+    # Normalize expected text columns
+    if "hotspot" not in df.columns:
+        df["hotspot"] = "Not significant"
+    if "damage" not in df.columns:
+        df["damage"] = "no damage"
+
+    df["hotspot"] = df["hotspot"].fillna("Not significant").astype(str)
+    df["damage"] = df["damage"].fillna("no damage").astype(str)
+
+    numeric_cols = [
+        "risk_index", "total_hazards",
+        "surface_crack", "major_damage",
+        "obstruction", "narrowed_pathway",
+        "lat", "long"
+    ]
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    df = df.dropna(subset=["lat", "long"]).copy()
 
     def classify_risk(x):
         if x >= 6:
             return "High Risk"
         elif x >= 3:
             return "Medium Risk"
-        else:
-            return "Low Risk"
+        return "Low Risk"
 
     def classify_priority(x):
         if x >= 6:
             return "Immediate Repair"
         elif x >= 3:
             return "Monitor"
-        else:
-            return "Low Priority"
+        return "Low Priority"
 
     df["risk_level"] = df["risk_index"].apply(classify_risk)
     df["priority"] = df["risk_index"].apply(classify_priority)
 
     return df
 
+
 df = load_data()
+
+# -----------------------------
+# Empty state
+# -----------------------------
+if df.empty:
+    st.markdown("""
+    <div style="
+        background: linear-gradient(90deg, #ffffff 0%, #f7fbff 100%);
+        padding: 22px 28px;
+        border-radius: 20px;
+        border: 1px solid #e4edf7;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+        margin-bottom: 18px;
+    ">
+        <div class="main-title">
+            Smart Walkability Monitoring System
+        </div>
+        <div class="sub-title">
+            Sidewalk Risk Prioritization Dashboard for LGU Monitoring
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.info("No processed dashboard data found yet. Run the backend pipeline first or wait for it to generate the CSV files.")
+    st.stop()
 
 # -----------------------------
 # Sidebar
@@ -325,8 +376,7 @@ else:
             return "#ff1f1f"
         elif risk_level == "Medium Risk":
             return "#e57373"
-        else:
-            return "#9e9e9e"
+        return "#9e9e9e"
 
     for _, row in filtered_df.iterrows():
         popup_html = f"""
@@ -378,8 +428,7 @@ def priority_color(val):
         return "background-color: #ffdddd; color: #8b0000; font-weight: 700;"
     elif val == "Monitor":
         return "background-color: #fff1cc; color: #8a6d00; font-weight: 700;"
-    else:
-        return "background-color: #eeeeee; color: #4a4a4a; font-weight: 700;"
+    return "background-color: #eeeeee; color: #4a4a4a; font-weight: 700;"
 
 def risk_gradient(val):
     try:
@@ -387,8 +436,7 @@ def risk_gradient(val):
             return "background-color: #ffcccc; color: #7a0000; font-weight: 700;"
         elif val >= 3:
             return "background-color: #ffe1e1; color: #a33a3a; font-weight: 700;"
-        else:
-            return "background-color: #f0f0f0; color: #555555; font-weight: 700;"
+        return "background-color: #f0f0f0; color: #555555; font-weight: 700;"
     except Exception:
         return ""
 
